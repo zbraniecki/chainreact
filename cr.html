@@ -19,7 +19,8 @@
          	,	b2MassData = Box2D.Collision.Shapes.b2MassData
          	,	b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape
          	,	b2CircleShape = Box2D.Collision.Shapes.b2CircleShape
-         	,	b2DebugDraw = Box2D.Dynamics.b2DebugDraw
+            ,	b2DebugDraw = Box2D.Dynamics.b2DebugDraw
+            ,   b2Transform = Box2D.Common.Math.b2Transform 
             ;
          
          world = new b2World(
@@ -39,6 +40,9 @@
          
          //create ground
          bodyDef.type = b2Body.b2_staticBody;
+         bodyDef.userData = {
+           'name': 'ground',
+         }
          wallFixDef.shape = new b2PolygonShape;
          wallFixDef.shape.SetAsBox(10, 0.1);
          bodyDef.position.Set(0,0.1);
@@ -59,13 +63,15 @@
          ballFixDef.filter.categoryBits = 0x0004;
          ballFixDef.filter.maskBits = 0x0002;
 
-         ballFixDef.userData = {
-            color: 'blue',
+         var bodyDef = new b2BodyDef;
+         bodyDef.type = b2Body.b2_dynamicBody;
+         bodyDef.userData = {
+           color: 'blue',
+           name: 'ball',
          };
          
          
-         for (var i=0;i<3;i++) {
-           bodyDef.type = b2Body.b2_dynamicBody;
+         for (var i=0;i<1;i++) {
            ballFixDef.shape = new b2CircleShape(0.4);
            bodyDef.position.x = Math.random() * 10;
            bodyDef.position.y = Math.random() * 10;
@@ -86,32 +92,51 @@
          window.setInterval(update, 1000 / 60);
 
          var canvasPosition = getElementPosition(document.getElementById("canvas"));
+
          
+         var bodyDef = new b2BodyDef;
+         bodyDef.type = b2Body.b2_dynamicBody;
+
+           bodyDef.userData = {
+             name: 'userball',
+           }
          document.addEventListener("mousedown", function(e) {
            var mouseX = (e.clientX - canvasPosition.x) / 30;
            var mouseY = (e.clientY - canvasPosition.y) / 30;
-           var I,ball;
-           var size = 0.1;
+           var I, userBall;
+           var size = 0.4;
            
-           bodyDef.type = b2Body.b2_dynamicBody;
            ballFixDef.shape = new b2CircleShape(0.1);
            bodyDef.position.x = mouseX;
            bodyDef.position.y = mouseY;
-           ball = world.CreateBody(bodyDef)
-           var fix = ball.CreateFixture(ballFixDef);
+           userBall = world.CreateBody(bodyDef)
+           var fix = userBall.CreateFixture(ballFixDef);
 
-           function growBall() {
-             ball.DestroyFixture(fix);
-             if (size < 0.4) {
-               size += 0.04;
+           /*var myListener = new Box2D.Dynamics.b2ContactListener;
+           myListener.BeginContact = function(contact) {
+             var ud1 = contact.GetFixtureA().GetBody().GetUserData()
+             var ud2 = contact.GetFixtureB().GetBody().GetUserData()
+             console.log(ud1.name)
+             console.log(ud2.name)
+             if (ud1.name == 'userball' || ud2.name == 'userball') {
+               alert('contact!')
+             }
+           }*/
+           //world.SetContactListener(myListener);
+
+
+         function growBall() {
+             userBall.DestroyFixture(fix);
+             if (size < 1.0) {
+               size += 0.07;
                ballFixDef.shape = new b2CircleShape(size);
-               fix = ball.CreateFixture(ballFixDef);
+               fix = userBall.CreateFixture(ballFixDef);
              } else {
                I = window.clearInterval(I)
              }
            }
 
-           I = window.setInterval(growBall, 50)
+           I = window.setInterval(growBall, 1000)
          }, true);
       };
 
