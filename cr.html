@@ -9,7 +9,7 @@
   <script type="text/javascript">
     var settings = {
       ball: {
-        speed: 4,
+        speed: 2,
         size: 0.4,
       },
       init: {
@@ -20,6 +20,7 @@
        
       var world;
       var balls = [];
+      var ballFixDef;
       
       function init() {
          var   b2Vec2 = Box2D.Common.Math.b2Vec2
@@ -70,7 +71,7 @@
          bodyDef.position.Set(10, 0);
          world.CreateBody(bodyDef).CreateFixture(wallFixDef);
 
-         var ballFixDef = new b2FixtureDef;
+         ballFixDef = new b2FixtureDef;
          ballFixDef.density = 1.0;
          ballFixDef.friction = 0;
          ballFixDef.restitution = 1.0;
@@ -85,16 +86,9 @@
            name: 'ball',
          };
          
-         
+
          for (var i=0;i<settings.init.balls;i++) {
-           ballFixDef.shape = new b2CircleShape(settings.ball.size);
-           bodyDef.position.x = Math.random() * 10;
-           bodyDef.position.y = Math.random() * 10;
-           var ball = world.CreateBody(bodyDef)
-           ball.CreateFixture(ballFixDef);
-           var rad = Math.random()*360;
-           ball.SetLinearVelocity(new b2Vec2(Math.cos(rad)*2,Math.sin(rad)*2))
-           balls.push(ball);
+           addBall();
          }
 
          //setup debug draw
@@ -170,8 +164,28 @@
          );
          world.DrawDebugData();
          world.ClearForces();
+
+         var chance = Math.random()*100;
+         if (chance>98)
+           addBall();
       };
 
+         function addBall() {
+           var bodyDef = new Box2D.Dynamics.b2BodyDef;
+           bodyDef.type = Box2D.Dynamics.b2Body.b2_dynamicBody;
+           bodyDef.userData = {
+             color: 'blue',
+             name: 'ball',
+           };
+           ballFixDef.shape = new Box2D.Collision.Shapes.b2CircleShape(settings.ball.size);
+           bodyDef.position.x = Math.random() * 10;
+           bodyDef.position.y = Math.random() * 10;
+           var ball = world.CreateBody(bodyDef)
+           ball.CreateFixture(ballFixDef);
+           var rad = Math.random()*360;
+           ball.SetLinearVelocity(new Box2D.Common.Math.b2Vec2(Math.cos(rad)*settings.ball.speed,Math.sin(rad)*settings.ball.speed))
+           balls.push(ball);
+         }
          //helpers
          
          //http://js-tut.aardon.de/js-tut/tutorial/position.html
