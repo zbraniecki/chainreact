@@ -1,12 +1,23 @@
 <html>
-   <head>
-      <title>Box2dWeb Chain React</title>
-   </head>
-   <body onload="init();">
-      <canvas id="canvas" width="600" height="400"></canvas>
-   </body>
-   <script type="text/javascript" src="Box2dWeb-2.1.a.3.js"></script>
-   <script type="text/javascript">
+  <head>
+    <title>Box2dWeb Chain React</title>
+  </head>
+  <body onload="init();">
+    <canvas id="canvas" width="600" height="400"></canvas>
+  </body>
+  <script type="text/javascript" src="Box2dWeb-2.1.a.3.js"></script>
+  <script type="text/javascript">
+    var settings = {
+      ball: {
+        speed: 4,
+        size: 0.4,
+      },
+      init: {
+        balls: 40,
+      }
+    } 
+       
+       
       var world;
       var balls = [];
       
@@ -29,6 +40,8 @@
                new b2Vec2(0, 0)    //gravity
             ,  true                 //allow sleep
          );
+
+         Box2D.Common.b2Settings.b2_velocityThreshold = 0.0; // billboard!
 
          var wallFixDef = new b2FixtureDef;
          wallFixDef.density = 1.0;
@@ -73,13 +86,14 @@
          };
          
          
-         for (var i=0;i<30;i++) {
-           ballFixDef.shape = new b2CircleShape(0.4);
+         for (var i=0;i<settings.init.balls;i++) {
+           ballFixDef.shape = new b2CircleShape(settings.ball.size);
            bodyDef.position.x = Math.random() * 10;
            bodyDef.position.y = Math.random() * 10;
            var ball = world.CreateBody(bodyDef)
            ball.CreateFixture(ballFixDef);
-           ball.SetLinearVelocity(new b2Vec2(2,2))
+           var rad = Math.random()*360;
+           ball.SetLinearVelocity(new b2Vec2(Math.cos(rad)*2,Math.sin(rad)*2))
            balls.push(ball);
          }
 
@@ -121,7 +135,7 @@
                var b2cs = ball.GetFixtureList().GetShape();
                var size = b2cs.GetRadius();
                if (size < 1.0) {
-                 size += 0.3;
+                 size += 0.1;
                  b2cs.SetRadius(size);
 
                  for(var i=0;i<balls.length;i++) {
@@ -141,7 +155,7 @@
                }
              }
              ball.SetLinearVelocity(new b2Vec2(0, 0))
-             I = window.setInterval(growBall, 100)
+             I = window.setInterval(growBall, 30)
            }
            explode(userBall);
          }, true);
