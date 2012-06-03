@@ -8,6 +8,7 @@
    <script type="text/javascript" src="Box2dWeb-2.1.a.3.js"></script>
    <script type="text/javascript">
       var world;
+      var balls = [];
       
       function init() {
          var   b2Vec2 = Box2D.Common.Math.b2Vec2
@@ -17,7 +18,8 @@
          	,	b2Fixture = Box2D.Dynamics.b2Fixture
          	,	b2World = Box2D.Dynamics.b2World
          	,	b2MassData = Box2D.Collision.Shapes.b2MassData
-         	,	b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape
+            ,	b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape
+            ,   b2Shape = Box2D.Collision.Shapes.b2Shape
          	,	b2CircleShape = Box2D.Collision.Shapes.b2CircleShape
             ,	b2DebugDraw = Box2D.Dynamics.b2DebugDraw
             ,   b2Transform = Box2D.Common.Math.b2Transform 
@@ -71,13 +73,14 @@
          };
          
          
-         for (var i=0;i<1;i++) {
+         for (var i=0;i<30;i++) {
            ballFixDef.shape = new b2CircleShape(0.4);
            bodyDef.position.x = Math.random() * 10;
            bodyDef.position.y = Math.random() * 10;
            var ball = world.CreateBody(bodyDef)
            ball.CreateFixture(ballFixDef);
            ball.SetLinearVelocity(new b2Vec2(2,2))
+           balls.push(ball);
          }
 
          //setup debug draw
@@ -103,8 +106,7 @@
          document.addEventListener("mousedown", function(e) {
            var mouseX = (e.clientX - canvasPosition.x) / 30;
            var mouseY = (e.clientY - canvasPosition.y) / 30;
-           var I, userBall;
-           var size = 0.4;
+           var userBall;
            
            ballFixDef.shape = new b2CircleShape(0.1);
            bodyDef.position.x = mouseX;
@@ -112,31 +114,36 @@
            userBall = world.CreateBody(bodyDef)
            var fix = userBall.CreateFixture(ballFixDef);
 
-           /*var myListener = new Box2D.Dynamics.b2ContactListener;
-           myListener.BeginContact = function(contact) {
-             var ud1 = contact.GetFixtureA().GetBody().GetUserData()
-             var ud2 = contact.GetFixtureB().GetBody().GetUserData()
-             console.log(ud1.name)
-             console.log(ud2.name)
-             if (ud1.name == 'userball' || ud2.name == 'userball') {
-               alert('contact!')
-             }
-           }*/
-           //world.SetContactListener(myListener);
 
+           function explode(ball) {
+             var I;
+             function growBall() {
+               var b2cs = ball.GetFixtureList().GetShape();
+               var size = b2cs.GetRadius();
+               if (size < 1.0) {
+                 size += 0.3;
+                 b2cs.SetRadius(size);
 
-         function growBall() {
-             userBall.DestroyFixture(fix);
-             if (size < 1.0) {
-               size += 0.07;
-               ballFixDef.shape = new b2CircleShape(size);
-               fix = userBall.CreateFixture(ballFixDef);
-             } else {
-               I = window.clearInterval(I)
+                 for(var i=0;i<balls.length;i++) {
+                   if (!balls[i]) continue
+                   var overlap = b2Shape.TestOverlap(b2cs,
+                                             ball.GetTransform(),
+                                             balls[i].GetFixtureList().GetShape(),
+                                             balls[i].GetTransform())
+                   if(overlap) {
+                     explode(balls[i]);
+                     delete balls[i]
+                   }
+                 }
+               } else {
+                 world.DestroyBody(ball);
+                 I = window.clearInterval(I)
+               }
              }
+             ball.SetLinearVelocity(new b2Vec2(0, 0))
+             I = window.setInterval(growBall, 100)
            }
-
-           I = window.setInterval(growBall, 1000)
+           explode(userBall);
          }, true);
       };
 
